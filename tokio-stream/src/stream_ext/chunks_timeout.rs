@@ -33,6 +33,11 @@ impl<S: Stream> ChunksTimeout<S> {
             cap: max_size,
         }
     }
+
+    /// Consumes the stream and immediately return the buffered items.
+    pub fn buffered(self) -> Vec<S::Item> {
+        self.items
+    }
 }
 
 impl<S: Stream> Stream for ChunksTimeout<S> {
