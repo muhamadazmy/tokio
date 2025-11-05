@@ -33,6 +33,34 @@ impl<S: Stream> ChunksTimeout<S> {
             cap: max_size,
         }
     }
+
+    /// Consumes the [`ChunksTimeout`] and then returns all buffered items.
+    ///
+    /// ```
+    /// use tokio::time::Duration;
+    /// use tokio_stream::{self as stream, StreamExt};
+    ///
+    /// #[tokio::main]
+    /// async fn main() {
+    ///     let chunked = stream::iter([1, 2, 3, 4])
+    ///        .throttle(Duration::from_millis(2))
+    ///        .chunks_timeout(4, Duration::from_millis(8));
+    ///
+    ///     tokio::pin!(chunked);
+    ///
+    ///     // race with another future
+    ///     tokio::select! {
+    ///         Some(_chunk) = chunked.next() => {}
+    ///         _ = tokio::time::sleep(Duration::from_millis(3)) => {}
+    ///     }
+    ///
+    ///     assert_eq!(chunked.into_remainder(), vec![1, 2]);
+    /// }
+    /// ```
+    pub fn into_remainder(mut self: Pin<&mut Self>) -> Vec<S::Item> {
+        let me = self.as_mut().project();
+        std::mem::take(me.items)
+    }
 }
 
 impl<S: Stream> Stream for ChunksTimeout<S> {
