@@ -33,6 +33,12 @@ impl<S: Stream> ChunksTimeout<S> {
             cap: max_size,
         }
     }
+
+    /// Drains the buffered items, returning them without waiting for the timeout or capacity limit.
+    pub fn reminder(mut self: Pin<&mut Self>) -> Vec<S::Item> {
+        let me = self.as_mut().project();
+        std::mem::take(me.items)
+    }
 }
 
 impl<S: Stream> Stream for ChunksTimeout<S> {
